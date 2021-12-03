@@ -1,0 +1,218 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# Week 1 - Data cleaning
+
+# In[1]:
+
+
+# Importeren
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Dataframes
+step_data = pd.read_csv("steps.csv", sep=";")
+survey_data = pd.read_csv('survey.csv')
+
+
+# Mergen van de data
+
+# In[2]:
+
+
+# Mergen van de data op ID
+df = survey_data.merge(step_data, on = "id")
+df.head(5)
+
+
+# Bekijken van de data en bijzondere waardes
+
+# In[3]:
+
+
+df.describe()
+
+
+# Boxplot maken om te kijken naar het gewicht
+
+# In[4]:
+
+
+sns.boxplot(x="weight", data=df)
+plt.title("Weight")
+plt.xlabel("Weight")
+plt.ylabel("Count")
+plt.xticks(rotation=45)
+plt.show()
+
+# Laat een grote uitschieter van 700 zien
+
+
+# Uitschieter uit de dataframe halen
+
+# In[5]:
+
+
+df['weight']=df['weight'].replace(700,np.nan)
+
+
+# Checken van de dataframe
+
+# In[6]:
+
+
+df.info(verbose=True)
+
+
+# Berekenen van het gemiddelde van de stappen. Tellen vanaf rij 9 tot 336.
+
+# In[7]:
+
+
+df['steps_mean']=df.iloc[:,9:336].mean(axis=1)
+df.head()
+
+
+# Histogram en boxplot maken voor steps_mean.
+
+# In[8]:
+
+
+sns.displot(x="steps_mean", kde=False, data=df)
+plt.title("Mean steps per day")
+plt.xlabel("Mean steps")
+plt.ylabel("Count")
+plt.xticks(rotation=45)
+plt.show()
+
+# Flinke uitschieter van meer dan 200.000
+
+
+# In[9]:
+
+
+sns.boxplot(x="steps_mean", data=df)
+plt.title("Mean steps per day")
+plt.xlabel("Mean steps")
+plt.ylabel("Count")
+plt.xticks(rotation=45)
+plt.show()
+
+# Flinke uitschieter van meer dan 200.000
+
+
+# Berekenen van de mediaan, gemiddelde en SD
+
+# In[10]:
+
+
+print('Median = '+str(df['steps_mean'].median()))
+print('Mean = '+str(df['steps_mean'].mean()))
+print('St Dev. = '+str(df['steps_mean'].std()))
+
+
+# Verwijderen van de gegevens meer dan 100.000 en opnieuw bekijken
+
+# In[11]:
+
+
+df=df[df['steps_mean']<100000]
+
+
+# In[12]:
+
+
+print('Median = '+str(df['steps_mean'].median()))
+print('Mean = '+str(df['steps_mean'].mean()))
+print('St Dev. = '+str(df['steps_mean'].std()))
+
+
+# In[13]:
+
+
+sns.displot(x="steps_mean", kde=False, data=df)
+plt.title("Mean steps per day")
+plt.xlabel("Mean steps")
+plt.ylabel("Count")
+plt.xticks(rotation=45)
+plt.show()
+
+
+# Bekijken of er verschillen zijn bij de stappen tussen leeftijdsgroepen en opleidingsniveau
+
+# In[14]:
+
+
+plt.figure(figsize = (15,8))
+plt.xticks(rotation=45)
+sns.violinplot(x='age',y='steps_mean',data=df)
+plt.title('Mean steps for each age group')
+plt.xlabel('Age group')
+plt.ylabel('Mean steps')
+plt.show()
+
+
+# Mensen van onder de 25 wandelen minder dan de oudere groepen. Nu kijken naar het opleidingsniveau.
+
+# In[15]:
+
+
+plt.figure(figsize = (15,8))
+plt.xticks(rotation=45)
+sns.boxplot(x='education_1',y='steps_mean',data=df)
+sns.swarmplot(x='education_1',y='steps_mean', size=3, data=df)
+plt.title('Mean steps for each age group')
+plt.xlabel('Age group')
+plt.ylabel('Mean steps')
+plt.show()
+
+
+# Er blijkt geen groot verschil te ziten in het aantal stappen. Opvalllend dat no degree weinig gegevens heeft.
+
+# In[16]:
+
+
+df['education_1'].value_counts()
+
+
+# Kijken naar een betere indicatie van een gezond gewicht door middel van BMI
+
+# In[17]:
+
+
+df['bmi'] = df['weight'] / df['height']/ 100 **2
+
+
+# Scatterplot matrix maken van de numerieke getallen
+
+# In[18]:
+
+
+df_sel = df[['steps_mean', 'bmi', 'weight']]
+df_sel.info()
+
+
+# In[19]:
+
+
+sns.pairplot(df_sel)
+
+
+# Correlatie matrix maken
+
+# In[20]:
+
+
+corr = df_sel.corr()
+
+
+# Liniaire regression is een verband waarbij hoe groter de x wordt, de y gelijkmatig meestijgt. Ze hebben dezelfde richtingscoëfficiënt. 
+
+# Maken van dummies van de catagorische tabellen
+
+df.head(10)
+
+df_dummies = pd.get_dummies(df_sel, columns=['city','age', 'gender', 'education_1'],drop_first= True)
+df_dummies.head()
